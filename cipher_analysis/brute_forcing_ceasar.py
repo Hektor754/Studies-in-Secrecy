@@ -13,7 +13,7 @@ def brute_force(text):
                 result += char
         print(result)
         
-file = "dknkfn.txt"
+file = input("Specify file path or name: ")
 
 with open(file, 'r') as f:
     content = f.read()

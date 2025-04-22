@@ -12,7 +12,7 @@ def encrypt(text, shift):
             result += char
     return result
 
-file = "dknkfn.txt"
+file = input("Specify file path or name: ")
 shift = 3
 
 with open(file, 'r+') as f:
