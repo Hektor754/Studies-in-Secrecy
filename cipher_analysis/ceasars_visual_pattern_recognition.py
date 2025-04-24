@@ -65,29 +65,35 @@ def visualize_ic_by_chunks(text, chunk_size=100):
 
 def bigram_trigram_visualizzation(text):
     text = text.upper()
-    clean_text = ""
+    clean_text = ''.join(c for c in text if c.isalpha())  # Clean the text
     heatmap = [[0 for _ in range(26)] for _ in range(26)]
     trigram_counts = Counter()
-    for char in text:
-        if char.isalpha():
-            clean_text += char
+    
     for i in range(len(clean_text) - 1):
         first = clean_text[i]
         second = clean_text[i + 1]
-        row = ord(first) - ord('A')
-        col = ord(second) - ord('A')
-        heatmap[row][col] += 1
+        
+        # Check if both characters are in the valid range (A-Z)
+        if first.isalpha() and second.isalpha():
+            row = ord(first) - ord('A')
+            col = ord(second) - ord('A')
+            
+            # Check if the row and col are within bounds (0-25)
+            if 0 <= row < 26 and 0 <= col < 26:
+                heatmap[row][col] += 1
+            else:
+                print(f"Skipping invalid bigram: {first}, {second}")
+    
     for i in range(len(clean_text) - 2):
         first = clean_text[i]
-        second = clean_text[i+1]
-        third = clean_text[i+2]
+        second = clean_text[i + 1]
+        third = clean_text[i + 2]
         trigram = first + second + third
         trigram_counts[trigram] += 1
+
     most_common_trigrams = trigram_counts.most_common(10)
 
-
-        
-        
+    # Plot the heatmap for bigrams
     plt.figure(figsize=(12, 10))
     sns.heatmap(heatmap, xticklabels=list(string.ascii_uppercase), yticklabels=list(string.ascii_uppercase), cmap="mako")
     plt.title("Bigram Frequency Heatmap")
@@ -95,6 +101,7 @@ def bigram_trigram_visualizzation(text):
     plt.ylabel("First Letter")
     plt.show()
     
+    # Plot the top 10 trigrams
     labels, values = zip(*most_common_trigrams)
     plt.figure(figsize=(10, 5))
     plt.bar(labels, values, color="teal")
@@ -102,6 +109,7 @@ def bigram_trigram_visualizzation(text):
     plt.xlabel("Trigram")
     plt.ylabel("Frequency")
     plt.show()
+
 
 file = input("Specify file path or name: ")
 with open(file, "r") as f:
