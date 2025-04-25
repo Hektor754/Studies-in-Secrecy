@@ -93,12 +93,25 @@ def bigram_trigram_visualizzation(text):
 
     most_common_trigrams = trigram_counts.most_common(10)
 
-    # Plot the heatmap for bigrams
-    plt.figure(figsize=(12, 10))
-    sns.heatmap(heatmap, xticklabels=list(string.ascii_uppercase), yticklabels=list(string.ascii_uppercase), cmap="mako")
-    plt.title("Bigram Frequency Heatmap")
-    plt.xlabel("Second Letter")
-    plt.ylabel("First Letter")
+    fig = plt.figure(figsize=(12, 10))
+    fig.patch.set_facecolor('#1e1e1e')
+
+    heatmap_plot = sns.heatmap(
+        heatmap,
+        xticklabels=list(string.ascii_uppercase),
+        yticklabels=list(string.ascii_uppercase),
+        cmap="mako"
+    )
+
+    plt.title("Bigram Frequency Heatmap", color='white')
+    plt.xlabel("Second Letter", color='white')
+    plt.ylabel("First Letter", color='white')
+    plt.tick_params(colors='white')
+
+    colorbar = heatmap_plot.collections[0].colorbar
+    colorbar.ax.yaxis.set_tick_params(color='white')
+    plt.setp(colorbar.ax.yaxis.get_ticklabels(), color='white')
+
     plt.show()
     
     # Plot the top 10 trigrams
