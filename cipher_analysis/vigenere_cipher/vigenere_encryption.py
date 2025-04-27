@@ -25,9 +25,9 @@ def vigenere_encrypt(text, key):
 
 file = input("Specify file path or name: ")
 
-key = input("Specify the key")
+key = input("Specify the key: ")
 
-with open(file, 'r+') as f:
+with open(file, 'r+', encoding="utf-8") as f:
     content = f.read()
     enc_content = vigenere_encrypt(content,key)
     f.seek(0)

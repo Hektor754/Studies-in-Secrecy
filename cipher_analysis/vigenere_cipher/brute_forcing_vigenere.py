@@ -1,5 +1,14 @@
 from collections import Counter
 
+common_words = ["the", "and", "that", "was", "with", "for"]
+
+def check_for_common_words(decrypted_text):
+    found_words = []
+    for word in common_words:
+        if word in decrypted_text.lower():
+            found_words.append(word)
+    return len(found_words)
+
 def calculate_index_of_coincidence(text):
     filtered = [char.upper() for char in text if char.isalpha()]
     N = len(filtered)
@@ -10,8 +19,9 @@ def calculate_index_of_coincidence(text):
     counts = Counter(filtered)
     numerator = sum(f * (f - 1) for f in counts.values())
     denominator = N * (N - 1)
+    num = numerator / denominator
 
-    return numerator / denominator
+    return num
 
 def decrypt(text, shift):
     result = ""
@@ -31,13 +41,15 @@ def calculate_letter_frequency(text):
     text = text.upper()
     filtered = [char for char in text if char.isalpha()]
     counts = Counter(filtered)
-    return counts
+    total = sum(counts.values())
+    freq = {letter: count / total for letter, count in counts.items()}
+    return freq
 
 def chi_squared_stat(cipher_freq, english_freq, total_letters):
     chi_squared = 0
     for letter in english_freq:
         expected = english_freq[letter] * total_letters
-        observed = cipher_freq.get(letter, 0) * total_letters
+        observed = cipher_freq.get(letter, 0)
         chi_squared += ((observed - expected) ** 2) / expected
     return chi_squared
 
@@ -58,45 +70,39 @@ def brute_force_vigenere(text):
     if int(answer) == 1:
         key_length = int(input("Give key length: "))
         for i in range(key_length):
-            group = text[i::key_length]
+            group = ''.join([char for char in text[i::key_length] if char.isalpha()])
             groups.append(group)
     else:
-        for unknown_key in range(1, 21):
-            groups = []
-            final = 0
-            for i in range(unknown_key):
-                group = text[i::unknown_key]
-                groups.append(group)
-                ic = calculate_index_of_coincidence(group)
-                final += ic
-            average_ic = final / len(groups)
-            list_of_averages.append(average_ic)
-
+        best_word_match_count = -1
         key_length = None
-        best_diff = float('inf')
-        for i in range(len(list_of_averages)):
-            diff = abs(list_of_averages[i] - english_val)
-            if diff < best_diff:
-                best_diff = diff
-                key_length = i + 1
+        for unknown_key in range(21,2):
+            groups = []
+            for i in range(unknown_key):
+                group = ''.join([char for j, char in enumerate(text[i::unknown_key]) if char.isalpha()])
+                groups.append(group)
+                decrypted_group = ''.join([decrypt(group, shift) for shift in range(26)])      
+                if check_for_common_words(decrypted_group) > 0:
+                    key_length = unknown_key
+                    break
+            if key_length is not None:
+                break
 
         print(f"Most probable key length: {key_length}")
     
     groups = [text[i::key_length] for i in range(key_length)]
 
     best_shift = None
-    best_score = -1
     key_shifts = []
 
     for group in groups:
         best_shift = None
-        best_score = -1
+        best_score = float('inf')
         for shift in range(26):
             decrypted_group = decrypt(group, shift)
             frequency = calculate_letter_frequency(decrypted_group)
-            score = chi_squared_stat(frequency, english_freq,len(group))
+            score = chi_squared_stat(frequency, english_freq, len(group))
 
-            if score > best_score:
+            if score < best_score:
                 best_score = score
                 best_shift = shift
 
@@ -121,6 +127,7 @@ def brute_force_vigenere(text):
             key_index += 1
         else:
             decrypted_text += char
+
     print("\nDecrypted Text:")
     print(decrypted_text)
 
@@ -129,7 +136,5 @@ file = input("Specify file path or name: ")
 with open(file, 'r') as f:
     content = f.read()
     decrypted = brute_force_vigenere(content)
-
-
         
         

@@ -15,7 +15,7 @@ def ceasar_encrypt(text, shift):
 file = input("Specify file path or name: ")
 shift = 3
 
-with open(file, 'r+') as f:
+with open(file, 'r+',encoding="utf-8") as f:
     content = f.read()
     enc_content = ceasar_encrypt(content,shift)
     f.seek(0)
