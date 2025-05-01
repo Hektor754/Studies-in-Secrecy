@@ -5,7 +5,6 @@ def bacon_encryption(text):
     result = ""
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     bacon_map = {char: format(i, '05b') for i, char in enumerate(alphabet)}
-    all_letters = string.ascii_letters
     for char in text:
         if char.isalpha():
             binary_letter = bacon_map[char.upper()]
