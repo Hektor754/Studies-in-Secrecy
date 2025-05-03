@@ -60,11 +60,17 @@ def playfair_encryption(text, key):
             encrypted_text += grid[row1][col2]
             encrypted_text += grid[row2][col1]
 
-    encrypted_list = list(encrypted_text)
-    for idx, char in non_alpha:
-        encrypted_list.insert(idx, char)
+    final_output = []
+    encrypted_idx = 0
 
-    return ''.join(encrypted_list)
+    for char in text:
+        if char.isalpha():
+            final_output.append(encrypted_text[encrypted_idx])
+            encrypted_idx += 1
+        else:
+            final_output.append(char)
+
+    return ''.join(final_output)
 
 
 file = input("Specify file path or name: ")
