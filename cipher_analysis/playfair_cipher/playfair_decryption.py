@@ -1,59 +1,62 @@
-def create_playfair_square(phrase):
-    """
-    Generate the Playfair square for the given phrase.
-    """
+def create_playfair_square(key):
     key = key.replace('J', 'I').upper() + 'ABCDEFGHIKLMNOPQRSTUVWXYZ'
-    key = "".join(dict.fromkeys(key))  # Remove duplicate letters
+    key = "".join(dict.fromkeys(key))
     grid = [[k for k in key[i:i+5]] for i in range(0, 25, 5)]
     return grid
 
-
 def find_location(grid, char):
-    """
-    Helper function to get the row and column of the given char.
-    """
-    for i in range(0, 5):
-        for j in range(0, 5):
+    for i in range(5):
+        for j in range(5):
             if grid[i][j] == char:
                 return i, j
 
-def playfair_decrypt(ciphertext: str, key: str) -> str:
-    """
-    Decrypt a message using the Playfair cipher.
-    """
+def playfair_decrypt(text, key):
     playfair_square = create_playfair_square(key)
-    message = ''
 
-    # For each digraphs, substitute the characters using the grid
-    for i in range(0, len(ciphertext), 2):
-        digraph = ciphertext[i:i+2]
+    clean_text = ''.join([c for c in text.upper().replace('J', 'I') if c.isalpha()])
+    decrypted = ''
+
+    for i in range(0, len(clean_text), 2):
+        digraph = clean_text[i:i+2]
+        if len(digraph) < 2:
+            continue
         row1, col1 = find_location(playfair_square, digraph[0])
         row2, col2 = find_location(playfair_square, digraph[1])
         if row1 == row2:
-            sub1 = playfair_square[row1][(col1 - 1) % 5]
-            sub2 = playfair_square[row2][(col2 - 1 ) % 5]
+            decrypted += playfair_square[row1][(col1 - 1) % 5]
+            decrypted += playfair_square[row2][(col2 - 1) % 5]
         elif col1 == col2:
-            sub1 = playfair_square[(row1 - 1) % 5][col1]
-            sub2 = playfair_square[(row2 - 1) % 5][col2]
+            decrypted += playfair_square[(row1 - 1) % 5][col1]
+            decrypted += playfair_square[(row2 - 1) % 5][col2]
         else:
-            sub1 = playfair_square[row1][col2]
-            sub2 = playfair_square[row2][col1]
-        
-        message += sub1 + sub2
+            decrypted += playfair_square[row1][col2]
+            decrypted += playfair_square[row2][col1]
 
-    # Remove the 'X' between two similar letters
     i = 0
-    while i < len(message) - 2:
-        if message[i] == message[i+2] and message[i+1] == 'X':
-            message = message[:i+1] + message[i+2:]
-        i += 1
+    clean_decrypted = ''
+    while i < len(decrypted):
+        if i + 2 < len(decrypted) and decrypted[i] == decrypted[i+2] and decrypted[i+1] == 'X':
+            clean_decrypted += decrypted[i]
+            i += 2
+        else:
+            clean_decrypted += decrypted[i]
+            i += 1
+    if len(clean_text) % 2 == 1 and clean_decrypted.endswith('X'):
+        clean_decrypted = clean_decrypted[:-1]
 
-    # Remove the last 'X'
-    if message[-1] == 'X':
-        message = message[:-1]
+    final_output = []
+    alpha_index = 0
+    for char in text:
+        if char.isalpha():
+            if alpha_index < len(clean_decrypted):
+                final_output.append(clean_decrypted[alpha_index])
+                alpha_index += 1
+            else:
+                final_output.append(char)
+        else:
+            final_output.append(char)
 
-    return message
-
+    return ''.join(final_output)
 
 file = input("Specify file path or name: ")
 key = input("Specify the key: ")
@@ -64,4 +67,3 @@ with open(file, 'r+', encoding="utf-8") as f:
     f.seek(0)
     f.write(dec_content)
     f.truncate()
-
