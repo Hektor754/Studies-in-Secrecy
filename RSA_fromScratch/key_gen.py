@@ -61,9 +61,21 @@ def generate_rsa_keys(bits=2048):
         e = random.randint(10000, 100000)
 
     print("Public Exponent e is coprime with φ(n)")
+    d = pow(e, -1, phi_n)
+    return (n, e, d), (n, e), (n, d)
 
-    return n, e, phi_n, prime, prime2
+def rsa_encryption(text: str, public_key: tuple):
+    n, e = public_key
+    text_int = int.from_bytes(text.encode(), 'big')
+    if text_int >= n:
+        raise ValueError("Message too big for this mod")
+    ciphertext = pow(text_int, e, n)
+    return ciphertext
 
-n, e, phi_n, p, q = generate_rsa_keys()
-print(f"\nGenerated Primes:\np: {p}\nq: {q}")
-print(f"n: {n}\nφ(n): {phi_n}\ne: {e}")
+def rsa_decryption(ciphertext: int, private_key: tuple) -> str:
+    n, d = private_key
+    text_int = int(pow(ciphertext, d, n))
+    byte_length = (text_int.bit_length() + 7) // 8
+    text_bytes = text_int.to_bytes(byte_length, 'big')
+    text = text_bytes.decode('utf-8')
+    return text
