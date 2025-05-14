@@ -1,3 +1,5 @@
+import os
+import json
 from math import gcd
 import random
 import secrets
@@ -34,48 +36,58 @@ def miller_rabin_test(n, k):
     return True
 
 def generate_large_prime(bits, trials):
-    print(f"Generating a {bits}-bit prime number...")
-    start_time = time.time()
-
     while True:
-        number = secrets.randbits(bits)
-        number |= (1 << (bits - 1)) | 1
-
+        number = secrets.randbits(bits) | 1
         if miller_rabin_test(number, trials):
-            end_time = time.time()
-            print(f"Prime found in {end_time - start_time:.2f} seconds.")
             return number
 
 def generate_rsa_keys(bits=2048):
-    prime = generate_large_prime(bits, 50)
+    prime1 = generate_large_prime(bits, 50)
     prime2 = generate_large_prime(bits, 50)
 
-    while prime == prime2:
+    while prime1 == prime2:
         prime2 = generate_large_prime(bits, 50)
 
-    n = prime * prime2
-    phi_n = (prime - 1) * (prime2 - 1)
+    n = prime1 * prime2
+    phi_n = (prime1 - 1) * (prime2 - 1)
     
     e = 65537
     while gcd(e, phi_n) != 1:
         e = random.randint(10000, 100000)
 
-    print("Public Exponent e is coprime with φ(n)")
     d = pow(e, -1, phi_n)
-    return (n, e, d), (n, e), (n, d)
+    
+    # Save keys to files
+    with open("public_key.txt", "w") as pub_file:
+        pub_file.write(json.dumps({"n": n, "e": e}))
 
-def rsa_encryption(text: str, public_key: tuple):
-    n, e = public_key
-    text_int = int.from_bytes(text.encode(), 'big')
-    if text_int >= n:
-        raise ValueError("Message too big for this mod")
-    ciphertext = pow(text_int, e, n)
+    with open("private_key.txt", "w") as priv_file:
+        priv_file.write(json.dumps({"n": n, "d": d}))
+    
+    print("Keys generated and saved.")
+    return (n, e, d)
+
+def load_keys():
+    if not os.path.exists("public_key.txt") or not os.path.exists("private_key.txt"):
+        print("Keys not found. Generating new keys...")
+        return generate_rsa_keys()
+
+    with open("public_key.txt", "r") as pub_file:
+        public_key = json.load(pub_file)
+    
+    with open("private_key.txt", "r") as priv_file:
+        private_key = json.load(priv_file)
+
+    return (public_key["n"], public_key["e"], private_key["d"])
+
+def rsa_encryption(message: str, e: int, n: int) -> int:
+    message_bytes = message.encode('utf-8')
+    message_int = int.from_bytes(message_bytes, 'big')
+    ciphertext = pow(message_int, e, n)
     return ciphertext
 
-def rsa_decryption(ciphertext: int, private_key: tuple) -> str:
-    n, d = private_key
-    text_int = int(pow(ciphertext, d, n))
+def rsa_decryption(ciphertext: int, n: int, d: int) -> str:
+    text_int = pow(ciphertext, d, n)
     byte_length = (text_int.bit_length() + 7) // 8
     text_bytes = text_int.to_bytes(byte_length, 'big')
-    text = text_bytes.decode('utf-8')
-    return text
+    return text_bytes.decode('utf-8')
