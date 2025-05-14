@@ -1,0 +1,2 @@
+RSA encryption is an asymmetric encryption which uses a public and a private key to encrypt
+and decrypt.

@@ -1,9 +1,7 @@
-import os
-import json
 from math import gcd
 import random
 import secrets
-import time
+import base64
 
 def miller_rabin_test(n, k):
     if n <= 1:
@@ -57,28 +55,38 @@ def generate_rsa_keys(bits=2048):
 
     d = pow(e, -1, phi_n)
     
-    # Save keys to files
-    with open("public_key.txt", "w") as pub_file:
-        pub_file.write(json.dumps({"n": n, "e": e}))
+    save_key_to_pem("private_key.pem", d, n, "PRIVATE")
+    save_key_to_pem("public_key.pem", e, n, "PUBLIC")
 
-    with open("private_key.txt", "w") as priv_file:
-        priv_file.write(json.dumps({"n": n, "d": d}))
+    return n, e, d
+
+def save_key_to_pem(filename, e_or_d, n, key_type="PUBLIC"):
+    """Serialize the keys to PEM format"""
+    key_data = f"{e_or_d}:{n}".encode()
+
+    base64_key = base64.b64encode(key_data).decode('utf-8')
+
+    if key_type == "PUBLIC":
+        header_footer = f"-----BEGIN PUBLIC KEY-----\n{base64_key}\n-----END PUBLIC KEY-----"
+    else:
+        header_footer = f"-----BEGIN PRIVATE KEY-----\n{base64_key}\n-----END PRIVATE KEY-----"
+
+    with open(filename, "w") as pem_file:
+        pem_file.write(header_footer)
+
+    print(f"{key_type} key saved as {filename}")
     
-    print("Keys generated and saved.")
-    return (n, e, d)
+def load_key_from_pem(filename):
+    with open(filename, "r") as pem_file:
+        pem_data = pem_file.read()
 
-def load_keys():
-    if not os.path.exists("public_key.txt") or not os.path.exists("private_key.txt"):
-        print("Keys not found. Generating new keys...")
-        return generate_rsa_keys()
+    base64_key = pem_data.splitlines()[1]
 
-    with open("public_key.txt", "r") as pub_file:
-        public_key = json.load(pub_file)
-    
-    with open("private_key.txt", "r") as priv_file:
-        private_key = json.load(priv_file)
+    decoded_data = base64.b64decode(base64_key).decode()
 
-    return (public_key["n"], public_key["e"], private_key["d"])
+    e_or_d, n = map(int, decoded_data.split(':'))
+
+    return e_or_d, n
 
 def rsa_encryption(message: str, e: int, n: int) -> int:
     message_bytes = message.encode('utf-8')

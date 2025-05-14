@@ -1,4 +1,4 @@
-from key_gen import generate_rsa_keys, rsa_encryption, rsa_decryption, load_keys
+from key_gen import generate_rsa_keys, rsa_encryption, rsa_decryption, load_key_from_pem
 
 def main():
     print("1. Generate RSA Keys")
@@ -16,12 +16,12 @@ def main():
         print("3. Decrypt a Message")
         choice = input("Press the corresponding number: ")
 
-    n, e, d = load_keys()
-
     if choice == "1":
-        print(f"Keys Loaded/Generated:\nPublic Key: (n={n}, e={e})\nPrivate Key: (n={n}, d={d})")
+        generate_rsa_keys()
+        print("Keys generated and saved")
     
     elif choice == "2":
+        n, e = load_key_from_pem("public_key.pem")
         file = input("Provide the File Path: ")
         with open(file, 'r') as f:
             message = f.read()
@@ -35,6 +35,7 @@ def main():
         print(f"Message encrypted and saved to {encrypted_file}")
     
     elif choice == "3":
+        n, d = load_key_from_pem("private_key.pem")
         d_file = input("Provide the Encrypted File Path: ")
         with open(d_file, 'r') as en_f:
             ciphertext = int(en_f.read())
