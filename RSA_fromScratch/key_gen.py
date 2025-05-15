@@ -1,7 +1,7 @@
 from math import gcd
 import random
 import secrets
-import time
+import base64
 
 def miller_rabin_test(n, k):
     if n <= 1:
@@ -34,36 +34,68 @@ def miller_rabin_test(n, k):
     return True
 
 def generate_large_prime(bits, trials):
-    print(f"Generating a {bits}-bit prime number...")
-    start_time = time.time()
-
     while True:
-        number = secrets.randbits(bits)
-        number |= (1 << (bits - 1)) | 1
-
+        number = secrets.randbits(bits) | 1
         if miller_rabin_test(number, trials):
-            end_time = time.time()
-            print(f"Prime found in {end_time - start_time:.2f} seconds.")
             return number
 
 def generate_rsa_keys(bits=2048):
-    prime = generate_large_prime(bits, 50)
+    prime1 = generate_large_prime(bits, 50)
     prime2 = generate_large_prime(bits, 50)
 
-    while prime == prime2:
+    while prime1 == prime2:
         prime2 = generate_large_prime(bits, 50)
 
-    n = prime * prime2
-    phi_n = (prime - 1) * (prime2 - 1)
+    n = prime1 * prime2
+    phi_n = (prime1 - 1) * (prime2 - 1)
     
     e = 65537
     while gcd(e, phi_n) != 1:
         e = random.randint(10000, 100000)
 
-    print("Public Exponent e is coprime with φ(n)")
+    d = pow(e, -1, phi_n)
+    
+    save_key_to_pem("private_key.pem", d, n, "PRIVATE")
+    save_key_to_pem("public_key.pem", e, n, "PUBLIC")
 
-    return n, e, phi_n, prime, prime2
+    return n, e, d
 
-n, e, phi_n, p, q = generate_rsa_keys()
-print(f"\nGenerated Primes:\np: {p}\nq: {q}")
-print(f"n: {n}\nφ(n): {phi_n}\ne: {e}")
+def save_key_to_pem(filename, e_or_d, n, key_type="PUBLIC"):
+    """Serialize the keys to PEM format"""
+    key_data = f"{e_or_d}:{n}".encode()
+
+    base64_key = base64.b64encode(key_data).decode('utf-8')
+
+    if key_type == "PUBLIC":
+        header_footer = f"-----BEGIN PUBLIC KEY-----\n{base64_key}\n-----END PUBLIC KEY-----"
+    else:
+        header_footer = f"-----BEGIN PRIVATE KEY-----\n{base64_key}\n-----END PRIVATE KEY-----"
+
+    with open(filename, "w") as pem_file:
+        pem_file.write(header_footer)
+
+    print(f"{key_type} key saved as {filename}")
+    
+def load_key_from_pem(filename):
+    with open(filename, "r") as pem_file:
+        pem_data = pem_file.read()
+
+    base64_key = pem_data.splitlines()[1]
+
+    decoded_data = base64.b64decode(base64_key).decode()
+
+    e_or_d, n = map(int, decoded_data.split(':'))
+
+    return e_or_d, n
+
+def rsa_encryption(message: str, e: int, n: int) -> int:
+    message_bytes = message.encode('utf-8')
+    message_int = int.from_bytes(message_bytes, 'big')
+    ciphertext = pow(message_int, e, n)
+    return ciphertext
+
+def rsa_decryption(ciphertext: int, n: int, d: int) -> str:
+    text_int = pow(ciphertext, d, n)
+    byte_length = (text_int.bit_length() + 7) // 8
+    text_bytes = text_int.to_bytes(byte_length, 'big')
+    return text_bytes.decode('utf-8')
