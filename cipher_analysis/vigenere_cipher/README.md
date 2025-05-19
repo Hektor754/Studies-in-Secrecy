@@ -8,6 +8,7 @@ Each letter of the message is encrypted by shifting it according to the correspo
 For example, using the keyword **KEY**, you align each letter of the message with a repeating sequence of the keyword:
 
 Plaintext: A T T A C K A T D A W N 
+
 Keyword: K E Y K E Y K E Y K E Y
 
 
