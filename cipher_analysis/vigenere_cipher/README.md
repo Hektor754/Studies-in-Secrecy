@@ -7,7 +7,7 @@ The Vigenère Cipher is a classic polyalphabetic substitution cipher that uses a
 Each letter of the message is encrypted by shifting it according to the corresponding letter in the **keyword**.  
 For example, using the keyword **KEY**, you align each letter of the message with a repeating sequence of the keyword:
 
-Plaintext: A T T A C K A T D A W N
+Plaintext: A T T A C K A T D A W N 
 Keyword: K E Y K E Y K E Y K E Y
 
 
